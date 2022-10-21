@@ -1,2 +1,5 @@
-# IPP24039
-Online Orchestration Service for Container Resources in Cloud Computing
+**Quick Start**
+```batch
+python -m pip install -r requirements.txt
+python test.py
+```
