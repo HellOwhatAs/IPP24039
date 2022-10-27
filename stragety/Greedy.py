@@ -1,5 +1,5 @@
 from typing import List
-import random
+import random, numpy as np
 
 def single_host(
         core_state:     List[float], 
@@ -17,4 +17,4 @@ def multi_hosts(
         cost:           float
     )->int:
     
-    return random.randint(0,len(cores_state)-1)
+    return np.argmin(np.mean(np.maximum(cores_state,arrive_time),axis=1))
