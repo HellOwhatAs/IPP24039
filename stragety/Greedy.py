@@ -1,5 +1,5 @@
 from typing import List
-import random, numpy as np
+import numpy as np
 
 def single_host(
         core_state:     List[float], 
@@ -7,7 +7,7 @@ def single_host(
         task_size:      List[float]
     )->List[int]:
 
-    return [random.randint(0,len(core_state)-1) for _ in task_size]
+    return [np.argmin(np.maximum(core_state,arrive_time))]*len(task_size)
 
 def multi_hosts(
         cores_state:    List[List[float]], 
