@@ -102,18 +102,56 @@ class DQN(object):
         loss.backward()
         self.optimizer.step()
 
-
-def dqn2multi_hosts(dqn:DQN)->Callable[[List[List[float]],float,List[List[int]],List[float],float],int]:
+class DQN_Manager:
+    def __init__(self,dqn:DQN):
+        self.dqn=dqn
+        self.multi_hosts_s:np.ndarray=None
+        self.multi_hosts_new_s:np.ndarray=None
+        self.multi_hosts_a:int=None
+    @staticmethod
+    def make_state(
+            cores_state:    List[List[float]], 
+            arrive_time:    float, 
+            task_locations: List[List[int]], 
+            task_size:      List[float],
+            cost:           float
+        )->np.ndarray:
+        return np.append(
+            np.maximum(np.array(cores_state).flatten()-arrive_time,0),
+            np.append(np.array(task_size,dtype=np.float64),np.zeros(15-len(task_size)))
+        )
     def multi_hosts(
+            self,
             cores_state:    List[List[float]], 
             arrive_time:    float, 
             task_locations: List[List[int]], 
             task_size:      List[float],
             cost:           float
         )->int:
-        
-        return random.randint(0,len(cores_state)-1)
-    return multi_hosts
+        self.multi_hosts_new_s = self.make_state(
+            cores_state,
+            arrive_time,
+            task_locations,
+            task_size,
+            cost
+        )
+        self.multi_hosts_a = self.dqn.choose_action(self.multi_hosts_new_s)
+        return self.multi_hosts_a
+
+    def learn(self,r:float):
+        if self.multi_hosts_s==None:return
+        self.dqn.store_transition(
+            self.multi_hosts_s,
+            self.multi_hosts_a,
+            r,
+            self.multi_hosts_new_s
+        )
+        self.multi_hosts_s = self.multi_hosts_new_s
+        self.multi_hosts_new_s = None
+
+        if self.dqn.memory_counter > MEMORY_CAPACITY:
+            self.dqn.learn()
+
 
 if __name__=="__main__":
     dqn = DQN()

@@ -5,7 +5,7 @@ from frame import Frame
 
 seed=0
 lmd=0.6
-jobnum=20000
+jobnum=2000
 
 # main
 from stragety import single_host,multi_hosts
