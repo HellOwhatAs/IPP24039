@@ -31,15 +31,15 @@ class Net(nn.Module):
 
 class DQN(object):
     def __init__(self,
+        N_ACTIONS:int,
+        N_STATES:int,
+        ENV_A_SHAPE:int,
         BATCH_SIZE = 32,
         LR = 0.01,                  # learning rate
         EPSILON = 0.9,              # greedy policy
         GAMMA = 0.9,                # reward discount
         TARGET_REPLACE_ITER = 100,   # target update frequency
-        MEMORY_CAPACITY = 2000,
-        N_ACTIONS = 20,
-        N_STATES = 20*25 + 15,
-        ENV_A_SHAPE = 0
+        MEMORY_CAPACITY = 2000
     ):
         self.BATCH_SIZE=BATCH_SIZE
         self.LR=LR
@@ -116,10 +116,7 @@ class DQN_Manager:
             task_size:      List[float],
             cost:           float
         )->np.ndarray:
-        return np.append(
-            np.maximum(np.array(cores_state).flatten()-arrive_time,0),
-            np.append(np.array(task_size,dtype=np.float64),np.zeros(15-len(task_size)))
-        )
+        return np.maximum(np.array(cores_state).flatten()-arrive_time,0)
     def multi_hosts(
             self,
             cores_state:    List[List[float]], 
@@ -139,7 +136,10 @@ class DQN_Manager:
         return self.multi_hosts_a
 
     def learn(self,r:float):
-        if self.multi_hosts_s==None:return
+        if self.multi_hosts_s is None:
+            self.multi_hosts_s = self.multi_hosts_new_s
+            self.multi_hosts_new_s = None
+            return
         self.dqn.store_transition(
             self.multi_hosts_s,
             self.multi_hosts_a,
