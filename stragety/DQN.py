@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Callable
 import random
 """
 Reference: https://mofanpy.com/tutorials/machine-learning/torch/DQN
@@ -21,22 +21,18 @@ EPSILON = 0.9               # greedy policy
 GAMMA = 0.9                 # reward discount
 TARGET_REPLACE_ITER = 100   # target update frequency
 MEMORY_CAPACITY = 2000
-env = gym.make('CartPole-v1', render_mode="human")
-env = env.unwrapped
-N_ACTIONS = env.action_space.n
-N_STATES = env.observation_space.shape[0]
-ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape     # to confirm the shape
+if __name__=='__main__':
+    env = gym.make('CartPole-v1', render_mode="human")
+    env = env.unwrapped
+    N_ACTIONS = env.action_space.n
+    N_STATES = env.observation_space.shape[0]
+    ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape     # to confirm the shape
+else:
+    env:any
+    N_ACTIONS:int
+    N_STATES:int
+    ENV_A_SHAPE:List[int]
 
-
-def multi_hosts(
-        cores_state:    List[List[float]], 
-        arrive_time:    float, 
-        task_locations: List[List[int]], 
-        task_size:      List[float],
-        cost:           float
-    )->int:
-    
-    return random.randint(0,len(cores_state)-1)
 
 class Net(nn.Module):
     def __init__(self, ):
@@ -106,34 +102,48 @@ class DQN(object):
         loss.backward()
         self.optimizer.step()
 
-dqn = DQN()
 
-print('\nCollecting experience...')
-for i_episode in range(400):
-    s = env.reset()[0]
-    ep_r = 0
-    while True:
-        env.render()
-        a = dqn.choose_action(s)
+def dqn2multi_hosts(dqn:DQN)->Callable[[List[List[float]],float,List[List[int]],List[float],float],int]:
+    def multi_hosts(
+            cores_state:    List[List[float]], 
+            arrive_time:    float, 
+            task_locations: List[List[int]], 
+            task_size:      List[float],
+            cost:           float
+        )->int:
+        
+        return random.randint(0,len(cores_state)-1)
+    return multi_hosts
 
-        # take action
-        s_, r, done, _, _ = env.step(a)
+if __name__=="__main__":
+    dqn = DQN()
 
-        # modify the reward
-        x, x_dot, theta, theta_dot = s_
-        r1 = (env.x_threshold - abs(x)) / env.x_threshold - 0.8
-        r2 = (env.theta_threshold_radians - abs(theta)) / env.theta_threshold_radians - 0.5
-        r = r1 + r2
+    print('\nCollecting experience...')
+    for i_episode in range(400):
+        s = env.reset()[0]
+        ep_r = 0
+        while True:
+            env.render()
+            a = dqn.choose_action(s)
 
-        dqn.store_transition(s, a, r, s_)
+            # take action
+            s_, r, done, _, _ = env.step(a)
 
-        ep_r += r
-        if dqn.memory_counter > MEMORY_CAPACITY:
-            dqn.learn()
+            # modify the reward
+            x, x_dot, theta, theta_dot = s_
+            r1 = (env.x_threshold - abs(x)) / env.x_threshold - 0.8
+            r2 = (env.theta_threshold_radians - abs(theta)) / env.theta_threshold_radians - 0.5
+            r = r1 + r2
+
+            dqn.store_transition(s, a, r, s_)
+
+            ep_r += r
+            if dqn.memory_counter > MEMORY_CAPACITY:
+                dqn.learn()
+                if done:
+                    print('Ep: ', i_episode,
+                        '| Ep_r: ', round(ep_r, 2))
+
             if done:
-                print('Ep: ', i_episode,
-                      '| Ep_r: ', round(ep_r, 2))
-
-        if done:
-            break
-        s = s_
+                break
+            s = s_
