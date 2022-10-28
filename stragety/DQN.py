@@ -1,6 +1,8 @@
 from typing import List
 import random
-
+"""
+Reference: https://mofanpy.com/tutorials/machine-learning/torch/DQN
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
