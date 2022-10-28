@@ -29,9 +29,9 @@ if __name__=='__main__':
     ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape     # to confirm the shape
 else:
     env:any
-    N_ACTIONS:int
-    N_STATES:int
-    ENV_A_SHAPE:List[int]
+    N_ACTIONS = 20
+    N_STATES = 20*25 + 15
+    ENV_A_SHAPE = 0
 
 
 class Net(nn.Module):
